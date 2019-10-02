@@ -1,5 +1,5 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 const List<String> currenciesList = [
   'AUD',
@@ -35,27 +35,24 @@ const bitcoinAverageURL =
     'https://apiv2.bitcoinaverage.com/indices/global/ticker';
 
 class CoinData {
-
-
-  Future getCoinData(String currency) async {
-    //4. Create a url combining the bitcoinAverageURl with the currencies we're interested, BTC to USD.
-    String requestURL = '$bitcoinAverageURL/BTC$currency';
-    //5. Make a GET request to the URL and wait for the response.
-    http.Response response = await http.get(requestURL);
-
-    //6. Check that the request was successful.
-    if (response.statusCode == 200) {
-      //7. Use the 'dart:convert' package to decode the JSON data that comes back from BitcoinAverage.
-      var decodedData = jsonDecode(response.body);
-      //8. Get the last price of bitcoin with the key 'last'.
-      var lastPrice = decodedData['last'];
-      //9. Output the lastPrice from the method.
-      return lastPrice;
-    } else {
-      //10. Handle any errors that occur during the request.
-      print(response.statusCode);
-      //Optional: throw an error if our request fails.
-      throw 'Problem with the get request';
+  Future getCoinData(String selectedCurrency) async {
+    Map<String, String> cryptoPrices = {};
+    for (String crypto in cryptoList) {
+      //Update the URL to use the crypto symbol from the cryptoList
+      String requestURL = '$bitcoinAverageURL/$crypto$selectedCurrency';
+      http.Response response = await http.get(requestURL);
+      if (response.statusCode == 200) {
+        var decodedData = jsonDecode(response.body);
+        double lastPrice = decodedData['last'];
+        //Create a new key value pair, with the key being the crypto symbol and the value being the lastPrice of that crypto currency.
+        cryptoPrices[crypto] = lastPrice.toStringAsFixed(0);
+      } else {
+        print(response.statusCode);
+        throw 'Problem with the get request';
+      }
     }
+    print(cryptoPrices);
+    return cryptoPrices;
+    
   }
 }
